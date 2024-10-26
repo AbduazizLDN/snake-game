@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Game with WASD and Arrow Key Controls</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #333;
+      margin: 0;
+    }
+    #gameCanvas {
+      border: 2px solid #000;
+      background-color: #fff;
+    }
+    #score {
+      font-size: 20px;
+      color: #fff;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="score">Score: 0</div>
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreDisplay = document.getElementById('score');
+
+    const gridSize = 20;
+    let snake = [{ x: 10, y: 10 }];
+    let snakeLength = 1;
+    let direction = { x: 1, y: 0 };
+    let apple = { x: Math.floor(Math.random() * canvas.width / gridSize), y: Math.floor(Math.random() * canvas.height / gridSize) };
+    let score = 0;
+    let speed = 150;
+    let interval;
+
+    function startGame() {
+      clearInterval(interval);
+      interval = setInterval(updateGame, speed);
+    }
+
+    function updateGame() {
+      const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
+      snake.unshift(head);
+
+      if (head.x < 0 || head.y < 0 || head.x >= canvas.width / gridSize || head.y >= canvas.height / gridSize) {
+        alert("Game Over! Final Score: " + score);
+        resetGame();
+        return;
+      }
+
+      for (let i = 1; i < snake.length; i++) {
+        if (snake[i].x === head.x && snake[i].y === head.y) {
+          alert("Game Over! Final Score: " + score);
+          resetGame();
+          return;
+        }
+      }
+
+      if (head.x === apple.x && head.y === apple.y) {
+        score++;
+        snakeLength++;
+        
+        if (score % 25 === 0 && speed > 30) {
+          speed -= 20;
+          clearInterval(interval);
+          startGame();
+        }
+
+        if (score >= 200) {
+          alert("Congratulations! You've reached the maximum score of 200!");
+          resetGame();
+          return;
+        }
+
+        apple = { x: Math.floor(Math.random() * canvas.width / gridSize), y: Math.floor(Math.random() * canvas.height / gridSize) };
+      } else {
+        snake.pop();
+      }
+
+      drawGame();
+    }
+
+    function drawGame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw apple
+      ctx.fillStyle = 'red';
+      ctx.fillRect(apple.x * gridSize, apple.y * gridSize, gridSize, gridSize);
+
+      for (let i = 0; i < snake.length; i++) {
+        if (i === 0) {
+          drawSnakeHead(snake[i]);
+        } else if (i === snake.length - 1) {
+          drawSnakeTail(snake[i]);
+        } else {
+          drawSnakeBody(snake[i], i);
+        }
+      }
+
+      scoreDisplay.textContent = 'Score: ' + score;
+    }
+
+    function drawSnakeHead(position) {
+      ctx.fillStyle = 'darkgreen';
+      ctx.fillRect(position.x * gridSize, position.y * gridSize, gridSize, gridSize);
+      
+      // Draw eyes
+      ctx.fillStyle = 'white';
+      const eyeOffset = 4;
+      const eyeSize = 4;
+      ctx.fillRect(position.x * gridSize + eyeOffset, position.y * gridSize + eyeOffset, eyeSize, eyeSize);
+      ctx.fillRect(position.x * gridSize + gridSize - eyeOffset - eyeSize, position.y * gridSize + eyeOffset, eyeSize, eyeSize);
+
+      // Draw tongue
+      ctx.fillStyle = 'pink';
+      const tongueSize = 6;
+      const tongueOffset = 2;
+      ctx.fillRect(position.x * gridSize + (gridSize / 2) - (tongueSize / 2), position.y * gridSize - tongueOffset, tongueSize, tongueOffset);
+    }
+
+    function drawSnakeBody(position, index) {
+      // Alternating pattern for body segments
+      ctx.fillStyle = index % 2 === 0 ? 'green' : '#006400'; // dark green and green
+      ctx.fillRect(position.x * gridSize, position.y * gridSize, gridSize, gridSize);
+    }
+
+    function drawSnakeTail(position) {
+      ctx.fillStyle = 'lightgreen';
+      ctx.fillRect(position.x * gridSize, position.y * gridSize, gridSize, gridSize);
+    }
+
+    function resetGame() {
+      snake = [{ x: 10, y: 10 }];
+      snakeLength = 1;
+      direction = { x: 1, y: 0 };
+      score = 0;
+      speed = 150;
+      apple = { x: Math.floor(Math.random() * canvas.width / gridSize), y: Math.floor(Math.random() * canvas.height / gridSize) };
+      startGame();
+    }
+
+    document.addEventListener('keydown', (e) => {
+      switch (e.key) {
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+          if (direction.y === 0) direction = { x: 0, y: -1 };
+          break;
+        case 'ArrowDown':
+        case 's':
+        case 'S':
+          if (direction.y === 0) direction = { x: 0, y: 1 };
+          break;
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+          if (direction.x === 0) direction = { x: -1, y: 0 };
+          break;
+        case 'ArrowRight':
+        case 'd':
+        case 'D':
+          if (direction.x === 0) direction = { x: 1, y: 0 };
+          break;
+      }
+    });
+
+    startGame();
+  </script>
+</body>
+</html>
